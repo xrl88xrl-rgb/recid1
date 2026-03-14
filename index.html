@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RECID-1 - Calculadora de Riesgo (v100)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background-color: #f0f8ff;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            padding: 5px 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .edad-ayuda {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .resultados {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .resultados h2 {
+            color: white;
+            border-left-color: #f1c40f;
+        }
+
+        .puntuacion {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .punt-label {
+            font-size: 18px;
+        }
+
+        .punt-valor {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 10px;
+            color: #f1c40f;
+        }
+
+        .punt-max {
+            font-size: 18px;
+            opacity: 0.7;
+        }
+
+        .riesgo, .probabilidad, .seguimiento {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #riesgo-texto {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        #prob-texto, #seguimiento {
+            font-size: 16px;
+        }
+
+        .botones {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-calcular, .btn-limpiar {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-calcular {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-limpiar {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-calcular:hover, .btn-limpiar:hover {
+            opacity: 0.9;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .radio-group {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="background-color: bisque;" class="container">
+        <h1>RECID-1</h1>
+        <p class="subtitle">Escala de Riesgo de Recidiva</p>
+        <p class="subtitle">Cáncer de Mama - Versión 100 puntos</p>
+        
+        <!-- ====================================================
+             FACTORES CLÍNICOS (30 puntos máx)
+        ==================================================== -->
+        <div class="section">
+            <h2>📊 Factores Clínicos (30 pts)</h2>
+            
+            <!-- Tipo de Tumor -->
+            <div class="input-group">
+                <label>Tipo de Tumor (0-8 pts)</label>
+                <select id="tipo_tumor">
+                    <option value="0">Luminal A</option>
+                    <option value="3">Luminal B</option>
+                    <option value="5">HER2+</option>
+                    <option value="8">Triple Negativo</option>
+                </select>
+                <small style="color: #7f8c8d;">Lum A:0 | Lum B:3 | HER2+:5 | TN:8</small>
+            </div>
+            
+            <div class="input-group">
+                <label>Ki-67 (0-6 pts)</label>
+                <select id="ki67">
+                    <option value="0">&lt;20%</option>
+                    <option value="3">20-30%</option>
+                    <option value="6">&gt;30%</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>HER2 (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="her2" value="4"> Positivo (+4)</label>
+                    <label><input type="radio" name="her2" value="0" checked> Negativo</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Grado (0-4 pts)</label>
+                <select id="grado">
+                    <option value="0">Grado 1</option>
+                    <option value="2">Grado 2</option>
+                    <option value="4">Grado 3</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Tamaño (0-4 pts)</label>
+                <select id="tamano">
+                    <option value="0">&lt;2 cm</option>
+                    <option value="2">2-5 cm</option>
+                    <option value="4">&gt;5 cm</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Adenopatías (N+) (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="adeno" value="4"> Sí (+4)</label>
+                    <label><input type="radio" name="adeno" value="0" checked> No</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             PERMEACIÓN (15 puntos máx)
+        ==================================================== -->
+        <div class="section">
+            <h2>🔬 Permeación (15 pts)</h2>
+            
+            <div class="input-group">
+                <label>Permeación linfática (0-8 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="pl" value="8"> Sí (+8)</label>
+                    <label><input type="radio" name="pl" value="0" checked> No</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Permeación vascular (0-7 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="pv" value="7"> Sí (+7)</label>
+                    <label><input type="radio" name="pv" value="0" checked> No</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             MAMOGRAFÍA (20 puntos máx)
+        ==================================================== -->
+        <div class="section">
+            <h2>📷 Mamografía (20 pts)</h2>
+            
+            <div class="input-group">
+                <label>BI-RADS Mamografía (0-6 pts)</label>
+                <select id="birads_m">
+                    <option value="0">BI-RADS 1-2</option>
+                    <option value="2">BI-RADS 3</option>
+                    <option value="4">BI-RADS 4</option>
+                    <option value="6">BI-RADS 5</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Microcalcificaciones (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="microcalc" value="4"> Presentes (+4)</label>
+                    <label><input type="radio" name="microcalc" value="0" checked> Ausentes</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Nódulo espiculado (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="nodulo_esp" value="4"> Presente (+4)</label>
+                    <label><input type="radio" name="nodulo_esp" value="0" checked> Ausente</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Distorsión arquitectural (0-3 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="distorsion" value="3"> Presente (+3)</label>
+                    <label><input type="radio" name="distorsion" value="0" checked> Ausente</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Densidad mamaria (0-3 pts)</label>
+                <select id="densidad">
+                    <option value="0">Tipo A (grasa)</option>
+                    <option value="1">Tipo B (dispersa)</option>
+                    <option value="2">Tipo C (heterogénea)</option>
+                    <option value="3">Tipo D (extremadamente densa)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             ECOGRAFÍA (25 puntos máx)
+        ==================================================== -->
+        <div class="section">
+            <h2>🔍 Ecografía (25 pts)</h2>
+            
+            <div class="input-group">
+                <label>BI-RADS Ecografía (0-6 pts)</label>
+                <select id="birads_us">
+                    <option value="0">BI-RADS 1-2</option>
+                    <option value="2">BI-RADS 3</option>
+                    <option value="4">BI-RADS 4</option>
+                    <option value="6">BI-RADS 5</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Nódulo hipoecoico (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="nodulo_hipo" value="4"> Presente (+4)</label>
+                    <label><input type="radio" name="nodulo_hipo" value="0" checked> Ausente</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Márgenes irregulares (0-5 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="margenes_irreg" value="5"> Presentes (+5)</label>
+                    <label><input type="radio" name="margenes_irreg" value="0" checked> Ausentes</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Vascularización aumentada (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="vasc_aum" value="4"> Presente (+4)</label>
+                    <label><input type="radio" name="vasc_aum" value="0" checked> Ausente</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Adenopatías axilares patológicas (0-4 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="adeno_ax" value="4"> Presentes (+4)</label>
+                    <label><input type="radio" name="adeno_ax" value="0" checked> Ausentes</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Sombra acústica posterior (0-2 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="sombra" value="2"> Presente (+2)</label>
+                    <label><input type="radio" name="sombra" value="0" checked> Ausente</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             EDAD Y FACTORES MODIFICADORES (10 puntos)
+        ==================================================== -->
+        <div class="section">
+            <h2>👤 Edad y Modificadores (10 pts)</h2>
+            
+            <div class="input-group">
+                <label>Edad: <span id="edad-valor">50</span> años</label>
+                <input type="range" id="edad" min="20" max="90" value="50" step="1">
+                <div class="edad-ayuda">
+                    <span>&lt;40: +3</span>
+                    <span>40-60: 0</span>
+                    <span>61-70: -2</span>
+                    <span>&gt;70: -4</span>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Receptores hormonales (0-4 pts)</label>
+                <select id="receptores">
+                    <option value="0">RE+ y RP+</option>
+                    <option value="2">RE+ / RP-</option>
+                    <option value="4">RE- / RP-</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Multifocalidad (0-3 pts)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="multifocal" value="3"> Sí (+3)</label>
+                    <label><input type="radio" name="multifocal" value="0" checked> No</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             RESULTADOS
+        ==================================================== -->
+        <div class="section resultados">
+            <h2>📋 Resultado</h2>
+            <div class="puntuacion">
+                <span class="punt-label">PUNTUACIÓN:</span>
+                <span class="punt-valor" id="puntos">0</span>
+                <span class="punt-max">/100</span>
+            </div>
+            <div class="riesgo" id="riesgo">
+                <span class="riesgo-label">RIESGO:</span>
+                <span class="riesgo-valor" id="riesgo-texto">BAJO</span>
+            </div>
+            <div class="probabilidad" id="probabilidad">
+                <span>Probabilidad: </span>
+                <span id="prob-texto">&lt; 12%</span>
+            </div>
+            <div class="seguimiento" id="seguimiento">
+                Control anual estándar
+            </div>
+        </div>
+        
+        <!-- ====================================================
+             BOTONES
+        ==================================================== -->
+        <div class="botones">
+            <button class="btn-calcular" onclick="calcular()">CALCULAR</button>
+            <button class="btn-limpiar" onclick="limpiar()">LIMPIAR</button>
+        </div>
+        
+        <p class="footer">RECID-1 v100 | Basado en análisis multivariante | Uso clínico con precaución</p>
+    </div>
+    
+    <script>
+        // Variables globales
+        let tipo_tumor = 0;
+        let ki67 = 0;
+        let her2 = 0;
+        let grado = 0;
+        let tamano = 0;
+        let adeno = 0;
+        let pl = 0;
+        let pv = 0;
+        let edad = 50;
+        let receptores = 0;
+        let multifocal = 0;
+        
+        // Mamografía
+        let birads_m = 0;
+        let microcalc = 0;
+        let nodulo_esp = 0;
+        let distorsion = 0;
+        let densidad = 0;
+        
+        // Ecografía
+        let birads_us = 0;
+        let nodulo_hipo = 0;
+        let margenes_irreg = 0;
+        let vasc_aum = 0;
+        let adeno_ax = 0;
+        let sombra = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tipo de tumor
+            document.getElementById('tipo_tumor').addEventListener('change', function() {
+                tipo_tumor = parseInt(this.value);
+            });
+            
+            // Ki-67
+            document.getElementById('ki67').addEventListener('change', function() {
+                ki67 = parseInt(this.value);
+            });
+            
+            // HER2
+            document.querySelectorAll('input[name="her2"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    her2 = parseInt(this.value);
+                });
+            });
+            
+            // Grado
+            document.getElementById('grado').addEventListener('change', function() {
+                grado = parseInt(this.value);
+            });
+            
+            // Tamaño
+            document.getElementById('tamano').addEventListener('change', function() {
+                tamano = parseInt(this.value);
+            });
+            
+            // Adenopatías
+            document.querySelectorAll('input[name="adeno"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    adeno = parseInt(this.value);
+                });
+            });
+            
+            // Permeación linfática
+            document.querySelectorAll('input[name="pl"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    pl = parseInt(this.value);
+                });
+            });
+            
+            // Permeación vascular
+            document.querySelectorAll('input[name="pv"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    pv = parseInt(this.value);
+                });
+            });
+            
+            // Edad
+            document.getElementById('edad').addEventListener('input', function() {
+                edad = parseInt(this.value);
+                document.getElementById('edad-valor').textContent = edad;
+            });
+            
+            // Receptores
+            document.getElementById('receptores').addEventListener('change', function() {
+                receptores = parseInt(this.value);
+            });
+            
+            // Multifocal
+            document.querySelectorAll('input[name="multifocal"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    multifocal = parseInt(this.value);
+                });
+            });
+            
+            // MAMOGRAFÍA
+            document.getElementById('birads_m').addEventListener('change', function() {
+                birads_m = parseInt(this.value);
+            });
+            
+            document.querySelectorAll('input[name="microcalc"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    microcalc = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="nodulo_esp"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    nodulo_esp = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="distorsion"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    distorsion = parseInt(this.value);
+                });
+            });
+            
+            document.getElementById('densidad').addEventListener('change', function() {
+                densidad = parseInt(this.value);
+            });
+            
+            // ECOGRAFÍA
+            document.getElementById('birads_us').addEventListener('change', function() {
+                birads_us = parseInt(this.value);
+            });
+            
+            document.querySelectorAll('input[name="nodulo_hipo"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    nodulo_hipo = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="margenes_irreg"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    margenes_irreg = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="vasc_aum"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    vasc_aum = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="adeno_ax"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    adeno_ax = parseInt(this.value);
+                });
+            });
+            
+            document.querySelectorAll('input[name="sombra"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    sombra = parseInt(this.value);
+                });
+            });
+        });
+
+        function calcular() {
+            let puntos = 0;
+            
+            // FACTORES CLÍNICOS (30 pts)
+            puntos += tipo_tumor;  // 0-8
+            puntos += ki67;        // 0-6
+            puntos += her2;        // 0-4
+            puntos += grado;       // 0-4
+            puntos += tamano;      // 0-4
+            puntos += adeno;       // 0-4
+            
+            // PERMEACIÓN (15 pts)
+            puntos += pl;          // 0-8
+            puntos += pv;          // 0-7
+            
+            // MAMOGRAFÍA (20 pts)
+            puntos += birads_m;    // 0-6
+            puntos += microcalc;   // 0-4
+            puntos += nodulo_esp;  // 0-4
+            puntos += distorsion;  // 0-3
+            puntos += densidad;    // 0-3
+            
+            // ECOGRAFÍA (25 pts)
+            puntos += birads_us;   // 0-6
+            puntos += nodulo_hipo; // 0-4
+            puntos += margenes_irreg; // 0-5
+            puntos += vasc_aum;    // 0-4
+            puntos += adeno_ax;    // 0-4
+            puntos += sombra;      // 0-2
+            
+            // EDAD Y MODIFICADORES (10 pts)
+            if (edad < 40) puntos += 3;
+            else if (edad > 70) puntos -= 4;
+            else if (edad > 60) puntos -= 2;
+            
+            puntos += receptores;  // 0-4
+            puntos += multifocal;  // 0-3
+            
+            puntos = Math.max(0, Math.min(100, puntos));
+            
+            // Actualizar UI
+            document.getElementById('puntos').textContent = puntos;
+            
+            const riesgoTexto = document.getElementById('riesgo-texto');
+            const probTexto = document.getElementById('prob-texto');
+            const seguimiento = document.getElementById('seguimiento');
+            
+            if (puntos <= 25) {
+                riesgoTexto.textContent = 'BAJO';
+                riesgoTexto.style.color = '#2ecc71';
+                probTexto.textContent = '< 10%';
+                seguimiento.textContent = 'Control anual estándar';
+            } else if (puntos <= 50) {
+                riesgoTexto.textContent = 'MODERADO';
+                riesgoTexto.style.color = '#f39c12';
+                probTexto.textContent = '10 - 20%';
+                seguimiento.textContent = 'Control semestral (alternar mamografía y ecografía)';
+            } else if (puntos <= 75) {
+                riesgoTexto.textContent = 'ALTO';
+                riesgoTexto.style.color = '#e67e22';
+                probTexto.textContent = '20 - 35%';
+                seguimiento.textContent = 'Control trimestral + pruebas complementarias';
+            } else {
+                riesgoTexto.textContent = 'MUY ALTO';
+                riesgoTexto.style.color = '#e74c3c';
+                probTexto.textContent = '> 35%';
+                seguimiento.textContent = 'Seguimiento intensivo multidisciplinario';
+            }
+        }
+
+        function limpiar() {
+            // Resetear radios a "No"
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (radio.value === '0' || radio.value === '0') {
+                    radio.checked = true;
+                }
+            });
+            
+            // Resetear selects
+            document.getElementById('tipo_tumor').value = '0';
+            document.getElementById('ki67').value = '0';
+            document.getElementById('grado').value = '0';
+            document.getElementById('tamano').value = '0';
+            document.getElementById('birads_m').value = '0';
+            document.getElementById('densidad').value = '0';
+            document.getElementById('birads_us').value = '0';
+            document.getElementById('receptores').value = '0';
+            
+            // Resetear edad
+            document.getElementById('edad').value = 50;
+            document.getElementById('edad-valor').textContent = '50';
+            
+            // Resetear variables
+            tipo_tumor = 0;
+            ki67 = 0;
+            her2 = 0;
+            grado = 0;
+            tamano = 0;
+            adeno = 0;
+            pl = 0;
+            pv = 0;
+            edad = 50;
+            receptores = 0;
+            multifocal = 0;
+            birads_m = 0;
+            microcalc = 0;
+            nodulo_esp = 0;
+            distorsion = 0;
+            densidad = 0;
+            birads_us = 0;
+            nodulo_hipo = 0;
+            margenes_irreg = 0;
+            vasc_aum = 0;
+            adeno_ax = 0;
+            sombra = 0;
+            
+            // Resetear resultados
+            document.getElementById('puntos').textContent = '0';
+            document.getElementById('riesgo-texto').textContent = 'BAJO';
+            document.getElementById('riesgo-texto').style.color = '#2ecc71';
+            document.getElementById('prob-texto').textContent = '< 10%';
+            document.getElementById('seguimiento').textContent = 'Control anual estándar';
+        }
+    </script>
+</body>
+</html>
